@@ -6,7 +6,7 @@
     Set the env environment before running.
 
     ```
-    # Save in your default shell. mine is ~/.zshrs
+    # Save in your default shell. mine is ~/.zshrc
     export JSS_USER=<enter prod user here>
     export JSS_PASSWORD=<enter prod pw here>
     export JSS_DEV_USER=<enter dev user here>
