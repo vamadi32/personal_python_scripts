@@ -12,6 +12,10 @@
     export JSS_DEV_USER=<enter dev user here>
     export JSS_DEV_PASSWORD=<enter dev password here>
     ```
+    # restart terminal or do
+    ```
+    source ~/.zshrc
+    ```
 
 ## 🚀 Have Fun!
 
