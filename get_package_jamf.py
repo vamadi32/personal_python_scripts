@@ -59,7 +59,7 @@ def main():
     expires = tokenResponse['expires']
     logging.info(f"Token Expiration: {expires}")
 
-    # Package name to search for
+    # Eample Package name to search for
     package_name = '1Password-7.9.pkg'
 
     # Search for the package
