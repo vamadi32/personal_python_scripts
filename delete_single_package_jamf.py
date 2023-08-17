@@ -1,22 +1,23 @@
-import requests, json
-import os, logging
+import requests
+import os, json, sys
+import logging
 
-# TO DO
-# Add argparse to collect input
-# add option for DEV
-
+# To Do
+# add possibility to pass package name as arg
 logging.basicConfig(level=logging.DEBUG, 
 format=' %(asctime)s - %(levelname)s - %(message)s')
 #logging.disable(logging.CRITICAL)
 
-jamfurl = os.getenv("JSS_URL")
+ # Your Jamf Pro credentials
+api_username = os.getenv("JSS_DEV_USER")
+api_password = os.getenv("JSS_DEV_PASSWORD")
+jamfurl = os.getenv("JSS_DEV_URL")
+
 # Jamf Pro API endpoint for package search
 api_url = jamfurl + '/JSSResource/packages'
 
-# Your Jamf Pro credentials
-api_username = os.getenv("JSS_USER")
-api_password = os.getenv("JSS_PASSWORD")
 
+# Get bearer token
 def getToken():
     urlendpoint = "/uapi/auth/tokens"
     payload=""
@@ -35,9 +36,9 @@ def invalidateToken(token):
         'Authorization': "Bearer " + token
     }
     response = requests.request("POST", jamfurl + url, data=payload, headers=headers)
+    logging.info(response)
 
-
-def search_packages(token, api_url, api_username, api_password, search_string):
+def search_package(token, api_url, api_username, api_password, package_name):
     # Set up the request headers with authentication
     headers = {
         'Content-Type': 'application/json',
@@ -51,22 +52,19 @@ def search_packages(token, api_url, api_username, api_password, search_string):
     # Check if the request was successful (status code 200)
     if response.status_code == 200:
         packages = response.json().get('packages')
-        matching_packages = []
-
-        # Loop through the packages and find the ones that contain the search_string
+        # Loop through the packages and find the matching package
         for package in packages:
-            if search_string.lower() in package['name'].lower():
-                matching_packages.append(package)
+            if package['name'] == package_name:
+                return package
         
-        return matching_packages
-
     return None
 
-def delete_package(api_url, api_username, api_password, package_id):
+def delete_package(token, api_url, api_username, api_password, package_id):
     # Set up the request headers with authentication
     headers = {
         'Content-Type': 'application/json',
-        'Accept': 'application/json'
+        'Accept': 'application/json',
+        'Authorization': "Bearer " + token
     }
 
     # Construct the URL for deleting the package
@@ -77,37 +75,38 @@ def delete_package(api_url, api_username, api_password, package_id):
 
     # Check if the request was successful (status code 200)
     if response.status_code == 200:
-        print('Package with ID {} deleted successfully.'.format(package_id))
+        print('Package deleted successfully.')
     else:
-        print('Failed to delete the package with ID {}. Status code: {}'.format(package_id, response.status_code))
+        print('Failed to delete the package. Status code: {}'.format(response.status_code))
+
 
 def main():
-    logging.debug("Starting Program")
+    logging.info("Starting Programm")
     # Get the token
     tokenResponse = getToken()
     token = tokenResponse['token']
     expires = tokenResponse['expires']
     logging.info(f"Token Expiration: {expires}")
 
-    # Search string to look for in package names
-    search_string = '1Password'
+    # Example Package name to search for
+    package_name = 'Google Chrome-Universal'
 
-    # Search for packages containing the search string
-    packages_to_delete = search_packages(token, api_url, api_username, api_password, search_string)
+    # Search for the package
+    package = search_package(token, api_url, api_username, api_password, package_name)
+    print(package)
+    sys.exit(0)
 
-    if packages_to_delete:
-        print('Packages to delete:')
-        for package in packages_to_delete:
-            #print('- {}'.format(package['name']))
-            # Check if the package is not "1Password.1.6.kg" before deleting
-            if package['name'] != '1Password8-8.9.15.pkg':
-                print(package['name'])
+    # Print the result
+    if package:
+        logging.info(f'Package found: {package_name}')
 
-                # add line to delete package
-                #delete_package(token, api_url, api_username, api_password, package['id'])
+        # Delete the package
+        delete_package(token, api_url, api_username, api_password, package['id'])
     else:
-        print('No packages containing "{}" found.'.format(search_string))
-
+        logging.ERROR('Package not found.')
+    
     invalidateToken(token)
+
 if __name__ == '__main__':
     main()
+

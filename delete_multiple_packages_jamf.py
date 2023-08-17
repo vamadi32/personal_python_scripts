@@ -1,22 +1,26 @@
-import requests
-import os, json
-import logging
+import requests, json
+import os, logging
 
+# WARNING!
+# This script will delete packages. Please make sure you use with care
+
+# TO DO
+# Add argparse to collect input
+# add option for DEV
 
 logging.basicConfig(level=logging.DEBUG, 
 format=' %(asctime)s - %(levelname)s - %(message)s')
 #logging.disable(logging.CRITICAL)
 
- # Your Jamf Pro credentials
-api_username = os.getenv("JSS_USER")
-api_password = os.getenv("JSS_PASSWORD")
-jamfurl = os.getenv("JSS_URL")
+
+# Your Jamf Pro credentials
+api_username = os.getenv("JSS_DEV_USER")
+api_password = os.getenv("JSS_DEV_PASSWORD")
+jamfurl = os.getenv("JSS_DEV_URL")
 
 # Jamf Pro API endpoint for package search
 api_url = jamfurl + '/JSSResource/packages'
 
-
-# Get bearer token
 def getToken():
     urlendpoint = "/uapi/auth/tokens"
     payload=""
@@ -35,9 +39,9 @@ def invalidateToken(token):
         'Authorization': "Bearer " + token
     }
     response = requests.request("POST", jamfurl + url, data=payload, headers=headers)
-    logging.info(response)
 
-def search_package(token, api_url, api_username, api_password, package_name):
+
+def search_packages(token, api_url, api_username, api_password, search_string):
     # Set up the request headers with authentication
     headers = {
         'Content-Type': 'application/json',
@@ -51,11 +55,15 @@ def search_package(token, api_url, api_username, api_password, package_name):
     # Check if the request was successful (status code 200)
     if response.status_code == 200:
         packages = response.json().get('packages')
-        # Loop through the packages and find the matching package
+        matching_packages = []
+
+        # Loop through the packages and find the ones that contain the search_string
         for package in packages:
-            if package['name'] == package_name:
-                return package
+            if search_string.lower() in package['name'].lower():
+                matching_packages.append(package)
         
+        return matching_packages
+
     return None
 
 def delete_package(token, api_url, api_username, api_password, package_id):
@@ -74,36 +82,35 @@ def delete_package(token, api_url, api_username, api_password, package_id):
 
     # Check if the request was successful (status code 200)
     if response.status_code == 200:
-        print('Package deleted successfully.')
+        logging.info(f"Package with ID: {package_id} deleted successfully!")
     else:
-        print('Failed to delete the package. Status code: {}'.format(response.status_code))
-
+        print('Failed to delete the package with ID {}. Status code: {}'.format(package_id, response.status_code))
 
 def main():
-    logging.info("Starting Programm")
+    logging.debug("Starting Program")
     # Get the token
     tokenResponse = getToken()
     token = tokenResponse['token']
     expires = tokenResponse['expires']
     logging.info(f"Token Expiration: {expires}")
 
-    # Example Package name to search for
-    package_name = '1Password8-8.10.6.pkg'
+    # Search string to look for in package names
+    search_string = 'AWS VPN Client'
 
-    # Search for the package
-    package = search_package(token, api_url, api_username, api_password, package_name)
+    # Search for packages containing the search string
+    packages_to_delete = search_packages(token, api_url, api_username, api_password, search_string)
 
-    # Print the result
-    if package:
-        logging.info(f'Package found: {package_name}')
-
-        # Delete the package
-        delete_package(token, api_url, api_username, api_password, package['id'])
+    if packages_to_delete:
+        print('Packages to delete:')
+        for package in packages_to_delete:
+            #print('- {}'.format(package['name']))
+            # Example: Check if the package is not "AWS VPN Client-3.7.0.pkg" before deleting
+            if package['name'] != 'AWS VPN Client-3.7.0.pkg':
+                # add line to delete package
+                delete_package(token, api_url, api_username, api_password, package['id'])
     else:
-        logging.ERROR('Package not found.')
-    
-    invalidateToken(token)
+        print('No packages containing "{}" found.'.format(search_string))
 
+    invalidateToken(token)
 if __name__ == '__main__':
     main()
-
