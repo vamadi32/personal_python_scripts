@@ -1,13 +1,14 @@
 import csv
+import os
 
 # Specify the input JSON file and output CSV file names
-input_json_file = 'user_1pass.txt'
+input_json_file = os.getenv('HOME')+'/Desktop/user_1pass.txt'
 output_csv_file = 'output.csv'
 
 # Create a CSV file and write the header
 with open(output_csv_file, 'w', newline='') as csv_file:
     csv_writer = csv.writer(csv_file)
-    csv_writer.writerow(['ID', 'Name', 'Last Authentication', 'State'])
+    csv_writer.writerow(['ID', 'Name', 'Last Authentication', 'State', 'Email'])
 
 # Initialize variables to store data
 current_item = {}
@@ -31,9 +32,11 @@ with open(input_json_file, 'r') as json_file:
                 current_item['Last Authentication'] = value
             elif key == 'State':
                 current_item['State'] = value
+            elif key == 'Email':
+                current_item['Email'] = value
 
         # If a complete item has been collected, add it to the data list and reset current_item
-        if len(current_item) == 4:
+        if len(current_item) == 5:
             data.append(current_item)
             current_item = {}
 
@@ -41,6 +44,6 @@ with open(input_json_file, 'r') as json_file:
 with open(output_csv_file, 'a', newline='') as csv_file:
     csv_writer = csv.writer(csv_file)
     for item in data:
-        csv_writer.writerow([item['ID'], item['Name'], item['Last Authentication'], item['State']])
+        csv_writer.writerow([item['ID'], item['Name'], item['Last Authentication'], item['State'], item['Email']])
 
 print(f'Data has been successfully written to {output_csv_file}.')
