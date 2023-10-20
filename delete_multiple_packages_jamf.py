@@ -1,5 +1,7 @@
 import argparse
 import os
+from rich import print
+from rich.logging import RichHandler
 import requests
 import logging
 import json
@@ -8,13 +10,25 @@ import json
 # Consider using keychain 
 # Configure command line arguments
 parser = argparse.ArgumentParser(description='Delete packages from Jamf Pro')
-parser.add_argument('environment', choices=['dev', 'prod'], help='Environment (dev or prod)')
+parser.add_argument('environment', choices=['dev', 'prod'], default='dev', help='Environment (dev or prod)')
 parser.add_argument('search_string', help='Search string for package names')
 parser.add_argument('package_name', help='Name of the package to Keep')
 args = parser.parse_args()
 
-# Set up logging
-logging.basicConfig(level=logging.DEBUG, format=' %(asctime)s - %(levelname)s - %(message)s')
+
+# # Set up logging
+# logging.basicConfig(level=logging.DEBUG, format=' %(asctime)s - %(levelname)s - %(message)s')
+
+# Create a logger with RichHandler
+log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)  # Set the log level
+log.addHandler(RichHandler())
+
+# ...
+
+# Use log.info, log.debug, etc., for colored logging
+log.debug("Starting Program")
+# Rest of the script remains the same
 
 # Determine the environment and set credentials and URL accordingly
 if args.environment == 'dev':
@@ -90,17 +104,17 @@ def delete_package(token, api_url, api_username, api_password, package_id):
 
     # Check if the request was successful (status code 200)
     if response.status_code == 200:
-        logging.info(f"Package with ID: {package_id} deleted successfully!")
+        log.info(f"Package with ID: {package_id} deleted successfully!")
     else:
         print('Failed to delete the package with ID {}. Status code: {}'.format(package_id, response.status_code))
 
 def main():
-    logging.debug("Starting Program")
+    log.debug("Starting Program")
     # Get the token
     tokenResponse = getToken()
     token = tokenResponse['token']
     expires = tokenResponse['expires']
-    logging.info(f"Token Expiration: {expires}")
+    log.info(f"Token Expiration: {expires}")
 
     # Search string to look for in package names
     search_string = args.search_string
