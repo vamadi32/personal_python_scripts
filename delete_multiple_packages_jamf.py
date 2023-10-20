@@ -1,26 +1,34 @@
-import requests, json
-import os, logging
-
-# WARNING!
-# This script will delete packages. Please make sure you use with care
+import argparse
+import os
+import requests
+import logging
+import json
 
 # TO DO
-# Add argparse to collect input
-# add option for DEV
+# Consider using keychain 
+# Configure command line arguments
+parser = argparse.ArgumentParser(description='Delete packages from Jamf Pro')
+parser.add_argument('environment', choices=['dev', 'prod'], help='Environment (dev or prod)')
+parser.add_argument('search_string', help='Search string for package names')
+parser.add_argument('package_name', help='Name of the package to delete')
+args = parser.parse_args()
 
-logging.basicConfig(level=logging.DEBUG, 
-format=' %(asctime)s - %(levelname)s - %(message)s')
-#logging.disable(logging.CRITICAL)
+# Set up logging
+logging.basicConfig(level=logging.DEBUG, format=' %(asctime)s - %(levelname)s - %(message)s')
 
-
-# Your Jamf Pro credentials
-api_username = os.getenv("JSS_DEV_USER")
-api_password = os.getenv("JSS_DEV_PASSWORD")
-jamfurl = os.getenv("JSS_DEV_URL")
+# Determine the environment and set credentials and URL accordingly
+if args.environment == 'dev':
+    api_username = os.getenv("JSS_DEV_USER")
+    api_password = os.getenv("JSS_DEV_PASSWORD")
+    jamfurl = os.getenv("JSS_DEV_URL")
+else:
+    api_username = os.getenv("JSS_USER")
+    api_password = os.getenv("JSS_PASSWORD")
+    jamfurl = os.getenv("JSS_URL")
 
 # Jamf Pro API endpoint for package search
 api_url = jamfurl + '/JSSResource/packages'
-
+    
 def getToken():
     urlendpoint = "/uapi/auth/tokens"
     payload=""
@@ -95,7 +103,7 @@ def main():
     logging.info(f"Token Expiration: {expires}")
 
     # Search string to look for in package names
-    search_string = 'AWS VPN Client'
+    search_string = args.search_string
 
     # Search for packages containing the search string
     packages_to_delete = search_packages(token, api_url, api_username, api_password, search_string)
@@ -105,7 +113,7 @@ def main():
         for package in packages_to_delete:
             #print('- {}'.format(package['name']))
             # Example: Check if the package is not "AWS VPN Client-3.7.0.pkg" before deleting
-            if package['name'] != 'AWS VPN Client-3.7.0.pkg':
+            if package['name'] != args.package_name:
                 # add line to delete package
                 delete_package(token, api_url, api_username, api_password, package['id'])
     else:
@@ -114,3 +122,4 @@ def main():
     invalidateToken(token)
 if __name__ == '__main__':
     main()
+
