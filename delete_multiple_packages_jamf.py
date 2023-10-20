@@ -10,7 +10,7 @@ import json
 parser = argparse.ArgumentParser(description='Delete packages from Jamf Pro')
 parser.add_argument('environment', choices=['dev', 'prod'], help='Environment (dev or prod)')
 parser.add_argument('search_string', help='Search string for package names')
-parser.add_argument('package_name', help='Name of the package to delete')
+parser.add_argument('package_name', help='Name of the package to Keep')
 args = parser.parse_args()
 
 # Set up logging
