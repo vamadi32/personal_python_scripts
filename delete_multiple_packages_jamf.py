@@ -7,28 +7,20 @@ import logging
 import json
 
 # TO DO
-# Consider using keychain 
+# Consider using apple keychain for authentication
+
 # Configure command line arguments
 parser = argparse.ArgumentParser(description='Delete packages from Jamf Pro')
-parser.add_argument('environment', choices=['dev', 'prod'], default='dev', help='Environment (dev or prod)')
+parser.add_argument('-e', '--environment', choices=['dev', 'prod'], default='dev', help='Environment (dev or prod)')
 parser.add_argument('search_string', help='Search string for package names')
 parser.add_argument('package_name', help='Name of the package to Keep')
 args = parser.parse_args()
 
-
-# # Set up logging
-# logging.basicConfig(level=logging.DEBUG, format=' %(asctime)s - %(levelname)s - %(message)s')
-
-# Create a logger with RichHandler
+# Create a logger with RichHandler for rich, colorful log outputs
+# Use log.info, log.debug, etc., for colored logging
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)  # Set the log level
 log.addHandler(RichHandler())
-
-# ...
-
-# Use log.info, log.debug, etc., for colored logging
-log.debug("Starting Program")
-# Rest of the script remains the same
 
 # Determine the environment and set credentials and URL accordingly
 if args.environment == 'dev':
@@ -44,6 +36,9 @@ else:
 api_url = jamfurl + '/JSSResource/packages'
     
 def getToken():
+    """
+    Get Bearer Token for temp authentication
+    """
     urlendpoint = "/uapi/auth/tokens"
     payload=""
     headers={
@@ -54,6 +49,9 @@ def getToken():
     return json.loads(response.text)
 
 def invalidateToken(token):
+    """
+    Invalidate Bearer Token 
+    """
     url = "/uapi/auth/invalidateToken"
     payload = ""
     headers = {
@@ -64,14 +62,15 @@ def invalidateToken(token):
 
 
 def search_packages(token, api_url, api_username, api_password, search_string):
-    # Set up the request headers with authentication
+    """
+    Set up the request headers with authentication and 
+    Send the GET request to search for packages
+    """
     headers = {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
         'Authorization': "Bearer " + token
     }
-
-    # Send the GET request to search for packages
     response = requests.get(api_url, headers=headers, auth=(api_username, api_password))
 
     # Check if the request was successful (status code 200)
