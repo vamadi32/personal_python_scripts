@@ -53,5 +53,38 @@
  - **This is a python script that will get all Okta groups from your okta instance,
  check if group is empty and assigned an app, and save the info into a csv**
 
+ 5. [delete_all_user_no_device_fast_jamf.py](delete_all_user_no_device_fast_jamf.py)
+ # Jamf Pro User Cleanup Script
+
+## Overview
+This Python script is designed to interact with a Jamf Pro server to identify users without assigned devices and optionally delete a specified number of these users. It's particularly useful in environments where user accounts need to be regularly audited and cleaned up for efficient resource management.
+
+## Features
+- Retrieve a list of all users from Jamf Pro.
+- Identify users who do not have any devices assigned to them.
+- Delete a specified number of users who do not have devices (up to 10 by default).
+
+## Requirements
+- Python 3.x
+- `requests` library (install with `pip install requests`)
+- Access to a Jamf Pro server with appropriate API permissions.
+
+## Setup
+1. Clone the repository or download the script to your local machine.
+2. Ensure Python 3 is installed on your system.
+3. Install the `requests` library if not already installed.
+4. Set up environment variables for your Jamf Pro credentials:
+   - `JSS_USER`: Your Jamf Pro username.
+   - `JSS_PASSWORD`: Your Jamf Pro password.
+   - `JSS_URL`: The URL of your Jamf Pro server.
+
+## Usage
+Run the script from the command line:
+
+```bash
+python3 delete_all_user_no_device_fast_jamf.py
+```
+
+
 ## 🚀 Have Fun!
 
